@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="utf-8">
+		<title>订单填写页</title>
+		<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css"/>
+		<script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+		<script src="/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			$(function () {
+				var count = 0;
+				// ******查询所有联系人******
+				$("button[name='chooseRen']").click(function(){
+					//往session中放入动态生成的标签id
+					sessionStorage.setItem("no",$(this).attr("no"))
+					var user = JSON.parse(sessionStorage.getItem("user"))
+					console.log(user)
+					var userId = user.uId
+					console.log(userId)
+					$.ajax({
+						type:"GET",
+						url:"../contact/queryContact",
+						async:true,
+						dataType:"json",
+						data:{
+						  userId:userId
+						},
+						success:function (result) {
+							count +=1;
+							if (count <= 1) {
+								$.each(result,function(i,item){
+									$("#contact_table").append(
+										"<tr>"+
+											"<td>"+
+												"<input type=\"radio\" name=\"choosed\" no="+item.cId+" mobile=\""+item.mobile+"\" realName=\""+item.realName+"\">"+
+											"</td>"+
+											"<td>"+item.realName+"</td>"+
+											"<td>"+item.mobile+"</td>"+
+										"</tr>"
+									)
+								})
+							}
+						}
+					})
+				})
+				// 
+				//***********将选中人信息传到页面***********
+				$("#add").click(function(){
+					$("input[name='choosed']").each(function(i,item){
+						if (item.checked == true) {
+							var mobile = item.getAttribute("mobile")
+							var realName = item.getAttribute("realName")
+							var cId = $(this).attr("no")
+							var no = sessionStorage.getItem("no")
+							$("#"+no+"realName").val(realName)
+							$("#"+no+"mobile").val(mobile)
+							$("#"+no+"cId").val(cId)
+							$("#"+no+"realName").attr("cId",cId)
+							console.log(mobile+"-"+realName+"-"+cId)
+							//alert($("#"+no+"realName").attr("cId"))
+							//点击完之后清除session
+							sessionStorage.removeItem("no")
+							//关闭弹窗界面
+							$("#cancel").click()
+						}
+					})
+				})
+				//********************************************
+				$("select").change(function () {
+				    var num = $("select").val();
+				    var rId = $("input[name='rId']").val();
+				    var no = $("#orderNo").text();
+                    let oneMoney = $("#roomPrice").text()
+                    var num = $("select").val();
+                    let money = parseInt(oneMoney)*parseInt(num)
+                    $("span[name='money']").text(money)
+                    let inTime = $("input[name='inTime']").val()
+                    let outTime = $("input[name='outTime']").val()
+					location.href="/room/addUserInfosByNum?num="+num+'&rId='+rId+'&no='+no+'&money='+money+'&inTime='+inTime+'&outTime='+outTime;
+                })
+                var num =  $("input[name='numHidden']").val()
+                if(num!=null && num!=''){
+                    $("select").val(num)
+                }
+                //支付的非空验证
+                $("#alipayBtn").click(function(){
+					//支付检验用户信息非空验证
+					let inTime = $("input[name='inTime']").val()
+					let outTime = $("input[name='outTime']").val()
+					if (inTime == "") {
+						alert("入住日期不能为空!")
+                        $("input[name='inTime']").focus()
+						return false
+					}else if (outTime == "") {
+                        alert("离宿日期不能为空!")
+                        $("input[name='outTime']").focus()
+						return false
+					}else {
+                        var num1 = $("select").val();
+                        let moneyStr = $("span[name='money']").text()
+						let money = parseInt(moneyStr)
+						$("input[name='money']").val(money)
+						$("input[name='roomCount']").val(num1)
+						if(money>0){
+							$("#appForm").submit();
+						}
+					}
+                });
+
+            })
+            $(document).ready(function(){
+                //回显入住时间
+                var inTime =  $("input[name='inTimeHidden']").val()
+                $("input[name='inTime']").val(frmt(inTime))
+                //离宿时间
+                var outTime =  $("input[name='outTimeHidden']").val()
+                $("input[name='outTime']").val(frmt(outTime))
+                function frmt(time) {
+                    var date = new Date(time)
+                    var inTime2 = date.getFullYear() + '-' +
+                        (date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth() + 1) + '-' +
+                        (date.getDate()<9?'0'+date.getDate():date.getDate())
+                    return inTime2;
+                }
+            })
+		</script>
+	</head>
+	<body style="background:url('/img/bac01.jpg') no-repeat;background-size: 100% 100%">
+		<div style="margin: 60px;">
+		</div>
+
+		<div class="container">
+			<form id="appForm" method="post" action="/alipay/alipay">
+				<div class="row">
+					<strong style="color: #f0ad4e;"><h4>预订后将立即锁定房源!</h4></strong>
+				</div>
+				<div class="row">
+					<strong style="color: #f0ad4e;"><h4>房源紧张！请尽快预订!</h4></strong>
+				</div>
+				<div class="row">
+					<strong style="color: #f0ad4e;"><h4>支付担保费即刻锁定房源!</h4></strong>
+				</div>
+				<br>
+				<div class="row">
+					<strong class="lead"><strong>预订信息</strong></strong>
+				</div>
+				<div style="margin: 8px;"></div>
+				<div class="row" style="font-size: 1.5rem;
+				border: 1px solid #696;
+				padding: 60px 0;text-align: center;
+				-webkit-border-radius: 8px;
+				-moz-border-radius: 8px;
+				border-radius: 8px;
+				-webkit-box-shadow: #666 10px 10px 10px;
+				-moz-box-shadow: #666 10px 10px 10px;
+				box-shadow: #666 12px 14px 12px;background: #9cf;">
+						<table width="800px" height="260px" style="margin-left: 12%">
+							<tr>
+								<td><h4 class="text-muted">订单编号：</h4></td>
+								<td><p id="orderNo" th:text="${order.no}"></p></td>
+								<td><input type="hidden" name="oId" th:value="${order.oId}"></input></td>
+								<td><input type="hidden" name="no" th:value="${order.no}"></input></td>
+								<input type="hidden" name="rId" th:value="${room.rId}"></input>
+							</tr>
+							<tr>
+								<td><h4 class="text-muted">房型信息：</h4></td>
+								<td><p th:text="*{room.roomType.type}"></p></td>
+								<td><input type="hidden" name="roomTypeId" th:value="*{room.roomType.rtId}"></input></td>
+								<td><input type="hidden" name="roomCount" value=""></input></td>
+							<tr>
+							<tr>
+								<td><h4 class="text-muted">入离日期：</h4></td>
+								<td>
+									<small>入住日期:</small>&nbsp;
+									<input type="hidden" name="inTimeHidden" th:value="${order.inTime}">
+									<input type="date" name="inTime" value="" style="width: 150px">
+									<strong class="text-muted">14:00 之后</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+									<strong class="text-muted">-------</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+									<small>离宿时间:</small>&nbsp;
+									<input type="hidden" name="outTimeHidden" th:value="${order.outTime}">
+									<input type="date" name="outTime" value="" style="width: 150px">
+									<strong class="text-muted">14:00 之后</strong>
+								</td>
+							</tr>
+							<tr>
+								<td><h4 class="text-muted">房间说明：</h4></td>
+								<td>
+									<ul class="list-inline">
+										<li>
+											<strong class="text-muted">请选择数量：</strong>
+											<input type="hidden" name="numHidden" th:value="${num}">
+											<select name="num">
+												<option value="1">1间</option>
+												<option value="2">2间</option>
+												<option value="3">3间</option>
+												<option value="4">4间</option>
+												<option value="5">5间</option>
+												<option value="6">6间</option>
+											</select>
+										</li>
+										<li>
+											<strong>每间最多入住<span th:text="${room.peopleNum}"></span>人</strong>
+										</li>
+										<li>
+											<strong style="color: red">（仅剩<span th:text="${room.num}"></span>间）</strong>
+										</li>
+									</ul>
+								</td>
+							</tr>
+							<tr>
+								<td><h4 class="text-muted">总金额：</h4></td>
+								<td>
+									    <input type="hidden" name="money" value=""/>
+										单价：<span id="roomPrice" th:text="${room.price}"></span>
+										总金额：<span name="money" th:value="${order.money}" th:text="${order.money}"></span>
+								</td>
+							</tr>
+						</table>
+				</div>
+				<div style="margin: 40px;">
+
+				</div>
+				<div class="row" >
+					<strong class="lead"><strong>入住信息</strong></strong>
+				</div>
+				<div style="margin: 8px;"></div>
+				<div class="row" style="font-size: 1.5rem;
+				border: 1px solid #696;
+				padding: 60px 0;text-align: center;
+				-webkit-border-radius: 8px;
+				-moz-border-radius: 8px;
+				border-radius: 8px;
+				-webkit-box-shadow: #666 10px 10px 10px;
+				-moz-box-shadow: #666 10px 10px 10px;
+				box-shadow: #666 12px 14px 12px;background: #9cf;">
+					<table width="800px" height="120px" style="margin-left: 12%">
+							<!-- 以下是循环代码 -->
+							<span th:each="num:${arrayList}">
+								<tr>
+									<td class="text-muted">
+										<h4>房间<span th:text="${num}"></span></h4>
+									</td>
+									<input type="hidden" readonly="readonly" name="cId" value=""  th:id="${num}+'cId'">
+									<td class="text-muted">
+										姓名&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" readonly="readonly" name="realName" th:id="${num}+'realName'" placeholder="每间需填写一名住客姓名">
+									</td>
+									<td class="text-muted" align="left">
+										<button type="button" class="btn btn-default" data-toggle="modal" data-target="#exampleModal" name="chooseRen" th:no="${num}"><small>
+											选择联系人</small></button>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td class="text-muted">
+										电话&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="mobile" readonly="readonly" th:id="${num}+'mobile'" placeholder="当地手机号">
+									</td>
+								</tr>
+							</span>
+							<!-- 以上是循环代码 -->
+							<tr>
+								<td></td>
+								<td>
+									<small style="color: #c0a16b">预订成功后会向您发送短信通知<br>
+	隐私无忧！酒店联系您时需通过携程加密代拨。</small>
+								</td>
+								<td>
+
+								</td>
+							</tr>
+						</table>
+				</div>
+				<div class="row" style="margin: 10px;">
+
+				</div>
+				<div class="row" align="center">
+					<button id="alipayBtn" type="button" class="btn btn-default" style="background-color: orange;width: 422px;">
+						下一步&nbsp;&nbsp;&nbsp;&nbsp;支付
+					</button>
+				</div>
+				<!-- ----------------------------------------- -->
+				<!-- 新增联系人 -->
+				<!-- data-target就是exampleModal -->
+				<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+				 <div class="modal-dialog" role="document">
+				  <div class="modal-content">
+				   <div class="modal-header">
+				    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+				      aria-hidden="true">×</span></button>
+				    <h4 class="modal-title" id="exampleModalLabel_example1">选择联系人</h4>
+				   </div>
+				   <div class="modal-body">
+					   <table class="table" width="520px" id="contact_table">
+						   <tr>
+								<td>操作</td>
+								<td>联系人</td>
+								<td>手机号</td>
+						   </tr>
+						   <tr>
+								
+						   </tr>
+					   </table>
+				   </div>
+				   <div class="modal-footer">
+				    <button type="button" class="btn btn-default"  data-dismiss="modal" id="cancel">取消</button>
+				    <button type="button" class="btn btn-primary" name="add" id="add">添加</button>
+				   </div>
+				  </div>
+				 </div>
+				</div>
+				<!--  -->
+				<div class="row" style="margin: 100px;">
+
+				</div>
+			</form>
+		</div>
+	</body>
+</html>

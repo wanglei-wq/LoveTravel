@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="UTF-8">
+<title>酒店点评</title>
+<link type="text/css" href="/css/score.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css"/>
+<script src="/js/jquery-3.4.1.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/common_myInfo.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div class="container-fluid">
+	<!--头部信息-->
+	<div class="row" style="background-image:-webkit-linear-gradient( right,#3dd,white,#6ac,#3dd);">
+		<div class="col-lg-3 col-lg-offset-7  text-right">
+			<ul class="nav nav-pills text-right" name="RBAC">
+				<li >
+					<a href="/index.html">酒店查询</a>
+				</li>
+				<li >
+					<a href="/myinfo.html" name="RBAC">个人信息</a>
+				</li>
+				<li >
+					<a href="/contact.html" name="RBAC">联系人信息</a>
+				</li>
+				<li class="active" >
+					<a href="/order/queryAllOrder?pageNum=1" name="RBAC">我的订单</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<!--  -->
+</div>
+<div class="order-evaluation clearfix" style="margin-top: 5px;">
+	<h4 th:text="给+${hotel.name}+的评价"></h4>
+	<!--获取thymeleaf中的值-->
+	<span hidden="hidden" id="hId" th:text="${hotel.hId}"></span>
+	<span hidden="hidden" id="roomTypeId" th:text="${roomTypeId}"></span>
+	<span hidden="hidden" id="oId" th:text="${oId}"></span>
+	<!--获取thymeleaf中的值-->
+	<p>请严肃认真对待此次评价哦！您的评价对我们真的真的非常重要！</p>
+	<div class="block">
+		<ul>
+			<li data-default-index="0">
+				<span>
+					<img src="/img/x1.png">
+					<img src="/img/x1.png">
+					<img src="/img/x1.png">
+					<img src="/img/x1.png">
+					<img src="/img/x1.png">
+				</span>
+				<em class="level"></em>
+			</li>
+		</ul>
+	</div>
+	<div class="order-evaluation-text" style="width: 779px;">
+		本次交易，乖，摸摸头 给您留下了什么印象呢？
+	</div>
+	<div class="order-evaluation-checkbox">
+		<ul class="clearfix">
+			<li class="order-evaluation-check" data-impression="1">环境良好<i class="iconfont icon-checked"></i></li>
+			<li class="order-evaluation-check" data-impression="2">房间舒适<i class="iconfont icon-checked"></i></li>
+			<li class="order-evaluation-check" data-impression="3">服务周到<i class="iconfont icon-checked"></i></li>
+			<li class="order-evaluation-check" data-impression="4">位置好<i class="iconfont icon-checked"></i></li>
+			<li class="order-evaluation-check" data-impression="5">性价比高<i class="iconfont icon-checked"></i></li>
+			<li class="order-evaluation-check" data-impression="6">交通方便<i class="iconfont icon-checked"></i></li>
+		</ul>
+	</div>
+	<div class="order-evaluation-textarea">
+		<textarea name="content" id="TextArea1" onKeyUp="words_deal();" ></textarea>
+		<span>还可以输入<em id="textCount">140</em>个字</span>
+	</div>
+	<a href="javascript:;" id="order_evaluation">评价完成</a>
+</div>
+<div id="order_evaluate_modal" class="dmlei_tishi_info"></div>
+
+
+<script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+    /*
+     * 根据index获取 str
+     * **/
+    function byIndexLeve(index){
+        var str ="";
+        switch (index)
+        {
+            case 0:
+                str="差评";
+                break;
+            case 1:
+                str="较差";
+                break;
+            case 2:
+                str="中等";
+                break;
+            case 3:
+                str="一般";
+                break;
+            case 4:
+                str="好评";
+                break;
+        }
+        return str;
+    }
+    //  星星数量
+    var stars = [
+        ['x2.png', 'x1.png', 'x1.png', 'x1.png', 'x1.png'],
+        ['x2.png', 'x2.png', 'x1.png', 'x1.png', 'x1.png'],
+        ['x2.png', 'x2.png', 'x2.png', 'x1.png', 'x1.png'],
+        ['x2.png', 'x2.png', 'x2.png', 'x2.png', 'x1.png'],
+        ['x2.png', 'x2.png', 'x2.png', 'x2.png', 'x2.png'],
+    ];
+    $(".block li").find("img").hover(function(e) {
+        var obj = $(this);
+        var index = obj.index();
+        if(index < (parseInt($(".block li").attr("data-default-index")) -1)){
+            return ;
+        }
+        var li = obj.closest("li");
+        var star_area_index = li.index();
+        for (var i = 0; i < 5; i++) {
+            li.find("img").eq(i).attr("src", "/img/" + stars[index][i]);//切换每个星星
+        }
+        $(".level").html(byIndexLeve(index));
+    }, function() {
+    })
+
+    $(".block li").hover(function(e) {
+    }, function() {
+        var index = $(this).attr("data-default-index");//点击后的索引
+        index = parseInt(index);
+        console.log("index",index);
+        $(".level").html(byIndexLeve(index-1));
+        console.log(byIndexLeve(index-1));
+        $(".order-evaluation ul li:eq(0)").find("img").attr("src","/img/x1.png");
+        for (var i=0;i<index;i++){
+
+            $(".order-evaluation ul li:eq(0)").find("img").eq(i).attr("src","/img/x2.png");
+        }
+    })
+    $(".block li").find("img").click(function() {
+        var obj = $(this);
+        var li = obj.closest("li");
+        var star_area_index = li.index();
+        var index1 = obj.index();
+        li.attr("data-default-index", (parseInt(index1)+1));
+        var index = $(".block li").attr("data-default-index");//点击后的索引
+        index = parseInt(index);
+        console.log("index",index);
+        $(".level").html(byIndexLeve(index-1));
+        console.log(byIndexLeve(index-1));
+        $(".order-evaluation ul li:eq(0)").find("img").attr("src","/img/x1.png");
+        for (var i=0;i<index;i++){
+            $(".order-evaluation ul li:eq(0)").find("img").eq(i).attr("src","/img/x2.png");
+        }
+
+    });
+    //印象
+    $(".order-evaluation-check").click(function(){
+        if($(this).hasClass('checked')){
+            //当前为选中状态，需要取消
+            $(this).removeClass('checked');
+        }else{
+            //当前未选中，需要增加选中
+            $(this).addClass('checked');
+        }
+    });
+    //评价字数限制
+    function words_deal()
+    {
+        var curLength=$("#TextArea1").val().length;
+        if(curLength>140)
+        {
+            var num=$("#TextArea1").val().substr(0,140);
+            $("#TextArea1").val(num);
+            alert("超过字数限制，多出的字将被截断！" );
+        }
+        else
+        {
+            $("#textCount").text(140-$("#TextArea1").val().length);
+        }
+    }
+    $("#order_evaluation").click(function(){
+        var hotelIdd = $("#hId").text()
+		var roomTypeIdd = $("#roomTypeId").text()
+		var oIdd = $("#oId").text()
+		var scoree = $(".block li").attr("data-default-index");
+        var contentt = $("#TextArea1").val()
+        if (scoree == null || scoree == "" || scoree == 0) {
+            scoree == 5;
+        }
+        $.ajax({
+			type:"POST",
+			url:"/toCommentController/toComment",
+			data:{
+                hotel_id:hotelIdd,
+                score:scoree,
+                content:contentt,
+                oId:oIdd,
+                roomTypeId:roomTypeIdd
+			},
+			dataType:"json",
+			success:function (responseText) {
+                if (responseText != null && responseText == 1) {
+                    $("#order_evaluate_modal").html("感谢您的评价！").show().delay(3000).hide(500);
+                    setTimeout(function(){
+                        location.href="/order/queryAllOrder"
+                    },1500)
+                }else {
+                    alert("添加评论出错");
+                    return;
+                }
+            },
+			error:function () {
+				console.log("ajax请求失败！")
+            }
+		});
+    })
+</script>
+</body>
+</html>

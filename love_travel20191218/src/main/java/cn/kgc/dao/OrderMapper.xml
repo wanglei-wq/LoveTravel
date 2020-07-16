@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.OrderMapper">
+    <resultMap id="orderMap" type="Order">
+        <id property="oId" column="oId"></id>
+        <association property="user" javaType="User"></association>
+        <association property="room" resultMap="roomMap"></association>
+        <association property="hotel" javaType="Hotel"></association>
+    </resultMap>
+
+    <resultMap id="orderDetaileMap" type="Order">
+         <id property="oId" column="oId"></id>
+         <association property="roomType" javaType="RoomType"></association>
+         <collection property="orderList" ofType="OrderList">
+             <association property="room" resultMap="roomMap"></association>
+             <association property="user" javaType="User"></association>
+             <association property="contact" resultMap="contactMap"></association>
+         </collection>
+    </resultMap>
+
+    <resultMap id="roomMap" type="Room">
+        <id property="rId" column="rId"></id>
+        <association property="roomType" javaType="RoomType"></association>
+    </resultMap>
+    <resultMap id="contactMap" type="Contact">
+        <id property="cId" column="g_cId"></id>
+        <result  property="mobile" column="g_mobile"></result>
+        <result  property="realName" column="g_realName"></result>
+    </resultMap>
+
+    <select id="queryAllOrder" resultMap="orderMap">
+        select *
+        from `order` a
+        inner join hotel b on a.hotelId = b.hId
+        inner join room_type c on a.roomTypeId = c.rtId
+        inner join `user` d  on a.userId=d.uId
+        <where>
+            <if test="inTime!=null">
+               and `inTime` <![CDATA[  >=  ]]> #{inTime}
+            </if>
+            <if test="outTime!=null">
+                AND `outTime` <![CDATA[   <=  ]]> #{outTime}
+            </if>
+            <if test="state!=null and state!=''">
+                AND state=#{state}
+            </if>
+            <if test="userId!=null">
+                AND userId=#{userId}
+            </if>
+            and a.flag=1
+        </where>
+        order by a.time desc
+    </select>
+
+    <select id="queryOrderById" resultMap="orderDetaileMap">
+        select a.*,b.*,c.rId,c.price,c.ismeal,c.peopleNum,c.num,d.*,e.*,f.*,g.cId g_cId,g.realName g_realName,g.mobile g_mobile
+        from `order` a
+        inner join order_list b on a.oId = b.orderId
+        inner join room c on b.roomId=c.rId
+        inner join hotel e on a.hotelId = e.hId
+        inner join room_type f on c.roomTypeId = f.rtId
+        inner join `user` d  on a.userId=d.uId
+        inner join contact g on g.cId = b.contactId
+        <where>
+            <if test="id!=null and id!=''">
+               and a.oId=#{id}
+            </if>
+            and a.flag=1
+        </where>
+        order by a.time desc
+    </select>
+
+    <update id="deleteOrderById">
+        UPDATE `order`
+        set
+        state="已删除",flag=0
+        where oId =#{id}
+    </update>
+
+    <select id="queryHotelNameById" parameterType="integer" resultType="Hotel">
+        SELECT * FROM hotel
+        WHERE hId=#{id}
+    </select>
+
+    <insert id="optionProductsAddOrderAndCheckOut">
+        INSERT INTO `order` (`no`,money,`time`,userId,hotelId)
+		select #{no},#{money},#{time},#{userId},#{hotelId} from dual
+		where not exists
+		(select `no` from `order` where `no`= #{no})
+    </insert>
+    <select id="selectOrderByOrderId" resultType="Order">
+        SELECT * FROM `order`
+		WHERE `no`= #{no}
+    </select>
+</mapper>

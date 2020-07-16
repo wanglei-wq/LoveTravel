@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh_CN" xmlns:th="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="utf-8">
+		<title>房间列表页</title>
+		<link rel="stylesheet" type="text/css" href="https://cdn.bootcss.com/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+		<script src="js/jquery-3.4.1.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/common_myInfo.js" type="text/javascript" charset="UTF-8"></script>
+		<script src="js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+            //**********jjking:split拆分法获取url中的参数--start**********
+            function GetRequest() {
+                var url = location.search; //获取url中"?"符后的字串
+                var theRequest = new Object();
+                if (url.indexOf("?") != -1) {
+                    var str = url.substr(1);
+                    strs = str.split("&");
+                    for(var i = 0; i < strs.length; i ++) {
+                        theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+                    }
+                }
+                return theRequest;
+            }
+            var Request = new Object();
+            Request = GetRequest();
+            //获取hotelId（酒店id）
+            var hid = Request['hotelId']
+			//
+            //**********jjking:split拆分法--end**********
+
+			$(function(){
+			    var randNum = Math.floor((Math.random()*7))
+				$("#img_hotel").append("<li><img src=\"img/hotel_room_"+randNum+".jpg\" width=\"200\" height=\"224\" ></li>"+
+                    "<li><img src=\"img/hotel_room_"+(randNum+1)+".jpg\" width=\"200\" height=\"224\" ></li>"+
+                    "<li><img src=\"img/hotel_room_"+(randNum+2)+".jpg\" width=\"200\" height=\"224\" ></li>"+
+                    "<li><img src=\"img/hotel_room_"+(randNum+3)+".jpg\" width=\"200\" height=\"224\" ></li>")
+			    //search-box 随屏幕滚动
+				var _box_y = $("#wl").offset().top;
+				var _box_x = $("#wl").offset().left;
+				$(window).scroll(function(){
+				if($(window).scrollTop() > _box_y){
+				$("#wl").attr("style","position: absolute;top:"+($(window).scrollTop()-6)+"px; left:"+_box_x+"px;z-index:99;width:1175px;");
+				}else{
+				$("#wl").attr("style","");
+				}
+				})
+				
+				//***************加载酒店详情数据--start**************
+				$.ajax({
+					type:"POST",
+					url:"../hotel/queryHotelById",
+					async:true,
+					dataType:"json",
+					data:{
+						id:hid
+					},
+					success:function (result) {
+						//*************** 酒店评分及酒店点评 ********************
+						var a = Math.round((result.hotel.sum/result.hotel.count)*100)/100
+						$("#zongpinfen").attr("tip",a)
+						//*************** 酒店评分及酒店点评结束 ********************
+                        for (i=0;i<result.hotel.star;i++){
+                            $("#hotel_star_img").append("<img src=\"img/钻石.jpg\" width=\"12px\" height=\"12px\" >")
+                        }
+                        //*************** 评论加载 ********************
+						var hId = result.hotel.hId
+						console.log(hId)
+						$.ajax({
+							type:"POST",
+							url:"../comment/queryComment",
+							async:true,
+							dataType:"json",
+							data:{
+								hotel_id:hId,
+								pageNo:1,
+								status:0,
+							},
+							success:(function(responseText){
+								var pageInfo = responseText.page
+								console.log(pageInfo)
+								var list = pageInfo.list
+								console.log(list)
+								$.each(list,function(i,pinlun){
+                                    var f = parseInt(Math.random()*10)
+									var n = parseInt(Math.random()*10)
+									var s = parseInt(Math.random()*100)
+                                    if (s<=30) {
+                                        s = 77
+                                    }
+									$("#pinlun_table").append(
+										 "<tr>" +
+										 "<td>" +
+										 "<div class=\"text-muted\">"+"1"+s+"******"+n+f+"</div></td>"+
+										 "<td>" +
+                                         "<div class=\"row\"><div class=\"col-lg-12\"><hr></div></div>"+
+										 "<div class=\"row\">"+
+										 "<div class=\"col-lg-3 text-center\">"+
+										 "<div>"+
+										 "<ul class=\"show_number clearfix\" style=\"margin: 0px; padding: 0px;\">"+
+										 "<li style=\"padding: 2px;margin: 0px;\">"+
+										 "<div class=\"atar_Show\">"+
+										 "<p tip=\""+pinlun.score+"\"></p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+										 "</div>"+
+										 "<span></span>"+
+										 "</li>"+
+										 "</ul>"+
+										 "</div>"+
+										 "</div>"+
+										 "<div class=\"col-lg-2 col-lg-offset-5\">"+
+										 "2019年12月入住"+
+										 "</div>"+
+										 "<div class=\"col-lg-2 right\">"+
+										 "高级大床房"+
+										 "</div>"+
+										 "</div>"+
+										 "<div class=\"row\" style=\"margin-top: 20px;padding=\"5px\"\"><div class=\"col-lg-12\"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+										 pinlun.content+
+										 "</div></div>"+
+										 "</td></tr>"
+									);
+								});
+							})
+						})
+						//*************** 评论加载 ********************
+						//全部
+                        $("#quanbu").click(function () {
+                            $.ajax({
+                                type:"POST",
+                                url:"/comment/queryComment",
+                                data:{
+                                    pageNo:1,
+                                    hotel_id:hid,
+                                    status:0
+                                },
+                                dataType:"json",
+                                success:function (responseText) {
+                                    if (responseText != null && responseText != "") {
+                                        $("#pinlun_table").empty()
+                                        var pageInfo = responseText.page
+                                        console.log(pageInfo)
+                                        var list = pageInfo.list
+                                        console.log(list)
+                                        $.each(list,function(i,pinlun){
+                                            $("#pinlun_table").append(
+                                                "<tr>" +
+                                                "<td>" +
+                                                "<div class=\"text-muted\">"+"1*********9"+"</div></td>"+
+                                                "<td>" +
+                                                "<div class=\"row\"><div class=\"col-lg-12\"><hr></div></div>"+
+                                                "<div class=\"row\">"+
+                                                "<div class=\"col-lg-3 text-center\">"+
+                                                "<div>"+
+                                                "<ul class=\"show_number clearfix\" style=\"margin: 0px; padding: 0px;\">"+
+                                                "<li style=\"padding: 2px;margin: 0px;\">"+
+                                                "<div class=\"atar_Show\">"+
+                                                "<p tip=\""+pinlun.score+"\"></p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+                                                "</div>"+
+                                                "<span></span>"+
+                                                "</li>"+
+                                                "</ul>"+
+                                                "</div>"+
+                                                "</div>"+
+                                                "<div class=\"col-lg-2 col-lg-offset-5\">"+
+                                                "2019年12月入住"+
+                                                "</div>"+
+                                                "<div class=\"col-lg-2 right\">"+
+                                                "高级大床房"+
+                                                "</div>"+
+                                                "</div>"+
+                                                "<div class=\"row\" style=\"margin-top: 20px;padding=\"5px\"\"><div class=\"col-lg-12\"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+                                                pinlun.content+
+                                                "</div></div>"+
+                                                "</td></tr>"
+                                            );
+                                        });
+                                    }
+                                }
+                            });
+                            //显示分数
+                            setTimeout(function() {
+                                $(".show_number li p").each(function(index, element) {
+                                    var num=$(this).attr("tip");
+                                    var www=num*2*16;//
+                                    $(this).css("width",www);
+                                    $(this).parent(".atar_Show").siblings("span").text("很好"+num+"分/5");
+                                });
+                            }, 500);
+                            //
+                            return false;
+                        })
+						//全部
+						//差评
+                        $("#chapin").click(function () {
+                            $.ajax({
+                                type:"POST",
+                                url:"/comment/queryComment",
+                                data:{
+                                    pageNo:1,
+                                    hotel_id:hid,
+                                    status:1
+                                },
+                                dataType:"json",
+                                success:function (responseText) {
+                                    if (responseText != null && responseText != "") {
+                                        $("#pinlun_table").empty()
+                                        var pageInfo = responseText.page
+                                        console.log(pageInfo)
+                                        var list = pageInfo.list
+                                        console.log(list)
+                                        $.each(list,function(i,pinlun){
+                                            $("#pinlun_table").append(
+                                                "<tr>" +
+                                                "<td>" +
+                                                "<div class=\"text-muted\">"+"1*********9"+"</div></td>"+
+                                                "<td>" +
+                                                "<div class=\"row\"><div class=\"col-lg-12\"><hr></div></div>"+
+                                                "<div class=\"row\">"+
+                                                "<div class=\"col-lg-3 text-center\">"+
+                                                "<div>"+
+                                                "<ul class=\"show_number clearfix\" style=\"margin: 0px; padding: 0px;\">"+
+                                                "<li style=\"padding: 2px;margin: 0px;\">"+
+                                                "<div class=\"atar_Show\">"+
+                                                "<p tip=\""+pinlun.score+"\"></p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+                                                "</div>"+
+                                                "<span></span>"+
+                                                "</li>"+
+                                                "</ul>"+
+                                                "</div>"+
+                                                "</div>"+
+                                                "<div class=\"col-lg-2 col-lg-offset-5\">"+
+                                                "2019年12月入住"+
+                                                "</div>"+
+                                                "<div class=\"col-lg-2 right\">"+
+                                                "高级大床房"+
+                                                "</div>"+
+                                                "</div>"+
+                                                "<div class=\"row\" style=\"margin-top: 20px;padding=\"5px\"\"><div class=\"col-lg-12\"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+                                                pinlun.content+
+                                                "</div></div>"+
+                                                "</td></tr>"
+                                            );
+                                        });
+                                    }else{
+                                        alert("该酒店暂时没有差评！")
+                                    }
+                                }
+                            });
+                            //显示分数
+                            setTimeout(function() {
+                                $(".show_number li p").each(function(index, element) {
+                                    var num=$(this).attr("tip");
+                                    var www=num*2*16;//
+                                    $(this).css("width",www);
+                                    $(this).parent(".atar_Show").siblings("span").text("很好"+num+"分/5");
+                                });
+                            }, 500);
+                            //
+                            return false;
+                        })
+						//差评
+						console.log(a)
+						console.log(result)
+						console.log(result.hotel.name)
+						$("#hotel_name").html(result.hotel.name)
+						$("#city_name").html(result.hotel.cityName)
+						$("#position").html(result.hotel.position)
+                        $.each(result.hotel.rooms, function(i, item) {
+
+                            //房间人数
+                            var room_person_num=2;
+                            //床型
+							var bed_type = "大床"
+							//床图片
+							var img_src = "fangjian_dachuangjpg.jpg"
+
+
+                            if(item.roomType.rtId==3){
+                                room_person_num=3;
+								bed_type = "单人床 X 3";
+								img_src = "fangjian_sanrenjian.jpg"
+							}
+							if(item.roomType.rtId==4){
+                                room_person_num=1
+								bed_type="单人床";
+                                img_src = "fangjian.jpg"
+							}
+
+							//是否有早餐
+							var meal = "无早餐"
+							if (item.ismeal==1){
+							    meal="有早餐"
+							}
+
+							var isDisabled=""
+                            //房间剩余数量是否紧张
+							var room_status ="class=\"text-center text-info\"><strong>(房源充足)</strong>"
+							if(item.num<5 && item.num>1){
+								room_status="class=\"text-center text-warning\"><strong>(房源紧张)</strong>"
+							}
+							if(item.num==1){
+							    room_status="class=\"text-center text-danger\"><strong>(！！！仅剩一间)</strong>"
+							}
+							if(item.num==0){
+                                room_status="class=\"text-center\" ><strong style=\"background-color: #f3f3f3;height: 40px;width: 60px\">(售罄)</strong>"
+								isDisabled="disabled='disabled'"
+							}
+
+
+                            $("#hotel_room_table").append(
+                                "<tr>" +
+                                "<td>" +
+                                "<ul class=\"list-inline\">" +
+                                "<li><img src=\"img/"+img_src+"\" width=\"50px\" height=\"50px\" ></li>" +
+                                "<li>" +
+                                "<a href=\"\">" +
+                                "<small class=\"text-info\">"+item.roomType.type+"</small><br>" +
+                                "<small>查看详情</small>" +
+                                "</a>" +
+                                "</li>" +
+                                "</ul>" +
+                                "</td>" +
+                                "<td>" +
+                                "<small>标准价</small><br>" +
+                                "<small class=\"text-muted\">编号:CDXWHI</small>" +
+                                "</td>" +
+                                "<td><small>"+bed_type+"</small></td>" +
+                                "<td><small>"+meal+"</small></td>" +
+                                "<td>" +
+                                "<small style=\"color: green;\">无线免费</small><br>" +
+                                "<small>禁烟</small>" +
+                                "</td>" +
+                                "<td>" +
+                                "<div title=\"最多住两人\">" +
+                                "<img src=\"img/xiaoren.jpg\" width=\"11px\" height=\"14px\" >X"+room_person_num +
+                                "</div>" +
+                                "</td>" +
+                                "<td>" +
+                                "<small style=\"color: red;\" title=\"订单一经确认，不可取消、修改。未入住或取消订单，全部或部分预付房费不予退还\">不可取消</small><br>" +
+                                "<small style=\"color: green;\">立即确认</small>" +
+                                "</td>" +
+                                "<td>" +
+                                "<ul class=\"list-inline\">" +
+                                "<li>¥</li>" +
+                                "<li><h4 style=\"color: red;\">"+item.price+"</h4></li>" +
+                                "</ul>" +
+                                "</td>" +
+                                "<td>" +
+                                "<p class=\"text-center\"><button name='roomIdBtn' type=\"button\" class=\"btn btn-warning\" title=\"需预先支付房款\" money=\""+item.price+"\" no=\""+item.rId+"\" "+isDisabled+"><small>预订(在线付)</small></button></p>"+
+							    "<p "+room_status+"</p>" +
+                                "</td>" +
+                                "</tr>"
+                            )
+						})
+                        //***************当点击预定房间时判断用户是否已经登录并且完善信息****************
+                        $("button[name='roomIdBtn']").click(function () {
+                            var user = JSON.parse(sessionStorage.getItem("user"))
+                            if (user != null && user != "") {
+                                if (user.realName == null || user.realName == ""){
+                                    alert("请您完善个人信息")
+                                    return false;
+                                }
+                                var id =$(this).attr("no")
+								var money =$(this).attr("money")
+                                var userStr = sessionStorage.getItem("user")
+                                var user = JSON.parse(userStr)
+                                console.log(user.uId)
+                                location.href="/order/addOrderAndQueryRoomByIdAndReserve?id="+id+"&uId="+user.uId+"&hId="+hid+"&money="+money
+                            }else{
+                                if (window.confirm("您还未登录，点击确定跳转到登录界面！")){
+                                    window.location.replace("loginAndRegister.html")
+                                    return false;
+                                }else{
+                                    window.location.reload();
+                                    return false;
+                                }
+							}
+                        })
+                        //
+						//*********************房间点击事件********************
+//						$("button[name='roomIdBtn']").click(function () {
+//							var id =$(this).attr("no")
+//						    var userStr = sessionStorage.getItem("user")
+//						    var user = JSON.parse(userStr)
+//						    console.log(user.uId)
+//							alert(user.uId)
+//							location.href="/order/addOrderAndQueryRoomByIdAndReserve?id="+id+"&uId="+user.uId+"&hId="+hid
+//						})
+					}
+				})
+                //***************加载酒店详情数据--end**************
+				//显示分数
+				setTimeout(function() {
+					$(".show_number li p").each(function(index, element) {
+					    var num=$(this).attr("tip");
+					    var www=num*2*16;//
+					    $(this).css("width",www);
+					    $(this).parent(".atar_Show").siblings("span").text("很好"+num+"分/5");
+					});
+				}, 500);
+				//
+			})
+		</script>
+	</head>
+	<body style="background-color: #c7ddef">
+		<style>
+		/* body,li,p,ul { 
+		    margin: 0;
+		    padding: 0;
+		    font: 12px/1 Tahoma, Helvetica, Arial, "\5b8b\4f53", sans-serif;
+		} */
+		ul, li, ol { list-style: none; }
+		/* 重置文本格式元素 */
+		a { text-decoration: none; cursor: pointer; color:#333333; font-size:14px;}
+		/* a:hover { text-decoration: none; } */
+		.clearfix::after{ display:block; content:''; height:0; overflow:hidden; clear:both;} 
+		/*星星样式*/
+		.content{ width:600px; margin:0 auto; padding-top:20px;}
+		.title{ font-size:14px; background:#dfdfdf; padding:10px; margin-bottom:10px;}
+		.block{ width:100%; margin:0 0 20px 0; padding-top:10px; padding-left:50px; line-height:21px;}
+		.block .star_score{ float:left;}
+		.star_list{height:21px;margin:50px; line-height:21px;}
+		/* #wl{height:21px;margin:10px; line-height:21px;} */
+		.block p,.block .attitude{ padding-left:20px; line-height:21px; display:inline-block;}
+		.block p span{ color:#C00; font-size:16px; font-family:Georgia, "Times New Roman", Times, serif;}
+		.star_score { background:url(img/stark2.png); width:160px; height:21px;  position:relative; }
+		.star_score a{ height:21px; display:block; text-indent:-999em; position:absolute;left:0;}
+		.star_score a:hover{ background:url(img/stars2.png);left:0;}
+		.star_score a.clibg{ background:url(img/stars2.png);left:0;}
+		#starttwo .star_score { background:url(img/starky.png);}
+		#starttwo .star_score a:hover{ background:url(img/starsy.png);left:0;}
+		#starttwo .star_score a.clibg{ background:url(img/starsy.png);left:0;}
+		/*星星样式*/
+		.show_number{ padding-left:50px; padding-top:20px;}
+		/* .show_number li{ width:240px; border:1px solid #ccc; padding:10px; margin-right:5px; margin-bottom:20px;} */
+		.atar_Show{background:url(img/stark2.png); width:160px; height:21px;  position:relative; float:left; }
+		.atar_Show p{ background:url(img/stars2.png);left:0; height:21px; width:134px;}
+		/* .show_number li span{ display:inline-block; line-height:21px;} */
+		</style>
+		<style type="text/css">
+			#www{
+			    position: fixed;
+			    z-index:(最高层的元素的层数+1);
+				top: 0px;
+				left: 174.6px;
+			}
+		</style>
+		<div class="container-fluid">
+			<!--头部信息-->
+			<div class="row" style="background-image:-webkit-linear-gradient( right,#3dd,white,#6ac,#3dd);">
+				<div class="col-lg-4 col-lg-offset-6  text-right">
+					<ul class="nav nav-pills text-right" name="RBAC">
+						<li >
+							<a href="/index.html">酒店查询</a>
+						</li>
+						<li class="active" >
+							<a href="#">酒店详情</a>
+						</li>
+						<li >
+							<a href="/myinfo.html" name="RBAC">个人信息</a>
+						</li>
+						<li >
+							<a href="/contact.html" name="RBAC">联系人信息</a>
+						</li>
+						<li>
+							<a href="/order/queryAllOrder?pageNum=1" name="RBAC">我的订单</a>
+						</li>
+
+					</ul>
+				</div>
+			</div>
+			<!--  -->
+			</div>
+
+			<div class="container">
+			<!-- 店名 -->
+			<div class="row" style="margin-top: 0px;">
+				<ul class="list-inline">
+					<li>
+						<div style="width: 30px; height: 20px;background-color: red;text-align: center;">
+							<small style="color: white;">精选</small>
+						</div>
+						</li>
+					<li>
+						<h3 style="color: royalblue;" ><span id="hotel_name"></span></h3>
+						</li>
+					<li>
+						<small>JingPingJiuDian</small>
+						</li>
+				</ul>
+			</div>
+
+			<!-- 有利条件 -->
+			<div class="row">
+				<ul class="list-inline" >
+					<li id="hotel_star_img">
+					</li>
+					<li style="background-color: #31B0D5">
+						<small style="color: white;">
+							度假出行
+						</small>
+					</li>
+					<li style="background-color: #31B0D5">
+						<small style="color: white;">
+							商务出行
+						</small>
+					</li>
+					<li style="background-color: #31B0D5"><small style="color: white;">地铁周边</small></li>
+					<li><small style="color: orange;">"交通方便,设施齐全"</small></li>
+				</ul>
+			</div>
+			
+			<!-- 地点 -->
+			<div class="row">
+				<ul class="list-inline">
+					<li><small><span id="city_name"></span></small></li>
+					<li><small><span id="position"></span>具体地点</small></li>
+				</ul>
+			</div>
+			<!-- 地图、周边街景、有无餐厅WIFI、收藏 -->
+			<div class="row">
+				<ul class="list-inline">
+					<li><small><a href="">交通地图</a></small></li>
+					<li><small><a href="">周边街景</a></small></li>
+					<li>
+						<img title="公共区域免费WIFI" src="img/wifi.jpg" width="21px" height="21px" >
+						<img title="餐厅" src="img/daocha.jpg" width="21px" height="21px" >
+					</li>
+					<li>
+						<a href=""><small style="color: red;">加入收藏</small></a>
+					</li>
+				</ul>
+			</div>
+			<!-- 酒店图片展示 -->
+			<div class="row">
+				<ul class="list-inline" id="img_hotel">
+
+				</ul>
+			</div>
+			<!-- 房型列表、酒店详情、酒店点评 -->
+			<div class="row" id="wl">
+				<ul class="list-inline">
+					<li><a href="#fangxingliebiao"><button type="button" class="btn btn-danger">房型列表</button></a></li>
+					<li><a href="#jiudianxiangqin"><button type="button" class="btn btn-danger">酒店详情</button></a></li>
+					<li><a href="#jiudiandianpin"><button type="button" class="btn btn-danger">酒店点评</button></a></li>
+				</ul>
+			</div>
+			<!-- 房型列表 -->
+			<!-- 房型列表 -->
+			<div class="row">
+				<table class="table bg-success" id="hotel_room_table">
+					<tr style="background-color: #F2F2F2;">
+						<td><small>房型</small></td>
+						<td><small>价位</small></td>
+						<td><small>床型</small></td>
+						<td><small>早餐</small></td>
+						<td><small>设施服务</small></td>
+						<td><small>入住人数</small></td>
+						<td><small>政策</small></td>
+						<td><small>房价（含服务费）</small></td>
+						<td><small></small></td>
+					</tr>
+					<tr>
+						<div style="background-color: #D9EDF7" id="fangxingliebiao">
+							<strong>符合条件的房型</strong>
+						</div>
+					</tr>
+					<!-- 房型循环 -->
+
+				</table>
+
+			</div>
+			<!-- 酒店提示 -->
+			<div class="row" >
+				<div class="col-lg-1"></div>
+				<div class="col-lg-11" id="jiudianxiangqin">
+					<small><strong>酒店提示</strong></small><br>
+					<small>大陆客人只能持身份证（二代身份证）入住，18周岁以内入住需要携带户口本，不接受其它证件。</small>
+				</div>
+			</div>
+			<!-- 酒店介绍 -->
+			<div class="row">
+				<div style="color: #337AB7;margin-top: 15px">
+					<h3>酒店介绍</h3>
+				</div>
+				<div>
+					<small style="padding: 2px 4px; background-color: palegreen">新开业</small>
+				</div>
+				<div>
+					<p class="text-hide">sdkfjlksd</p>
+				</div>
+				<div>
+					<ul class="list-inline">
+						<li style="background-color: #31B0D5">
+							<small style="color: white;">休闲度假</small>
+						</li>
+						<li style="background-color: #31B0D5"><small style="color: white;">商务出行</small></li>
+						<li style="background-color: #31B0D5"><small style="color: white;">地铁周边</small></li>
+					</ul>
+				</div>
+				<div>
+					<!-- 分割线 -->
+					<small>
+						-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					</small>
+				</div>
+				<div>
+					<ul class="list-inline">
+						<li><small>2019年开业</small></li>
+						<li><small>403间房</small></li>
+						<!-- 联系方式 -->
+						<li>
+							<button type="button" class="btn btn-default" style="background-color: white;padding: 0px;"><small>联系方式</small></button>
+						</li>
+						<!-- 营业执照 -->
+						<li>
+							<button type="button" class="btn btn-default" style="background-color: white;padding: 0px;"><small>住宿预订提供方</small></button>
+						</li>
+					</ul>
+				</div>
+				<div style="margin: 20px 0 0 0;">
+					<small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;北京三元桥CitiGO欢阁酒店位于东三环三元桥与机场高速及京密路交汇处、三元桥-燕莎商圈核心位置，紧邻第三使馆区，是北京的国门要塞。交通便利，地铁10号线、12号线、机场快轨三线交汇，距三元桥地铁站直线距离约100米，快速连接北京各大核心商圈。
+　　<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;北京三元桥CitiGO欢阁酒店，是华住旗下中高端品牌CitiGO的全球旗舰店。住在CitiGO，开门不用房卡，看电视不用遥控器，连空调、灯光、窗帘都能用手机智能控制。餐厅酒吧、健身房、洗衣房、游戏休闲区、共享办公区、会议室……首层1000㎡大堂超大空间，是当地社区的共享社交客厅。旅行者和本地居民坐在一起，认识新朋友，畅聊城中热点新闻。
+　　<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客房则把“沐浴”和“睡眠”两个核心体验做到惊艳。淋浴设施甄选创立于1936年的欧洲高端品牌“高仪”。牙膏选用日本药妆级品牌“Ora2”。床垫采用泰国天然乳胶打造，羽绒床品充绒量达90%。餐厅16小时不停歇，7:00-12:00超长早餐、现磨咖啡、精酿啤酒、免费宵夜，提供人性化的温情服务。</small>
+				</div>
+				<div style="color: #337AB7;margin: 20px 0 0 0;">
+					<ul class="list-inline">
+						<li><h4>所属集团</h4></li>
+						<li>&nbsp;</li>
+						<li><h5 class="text-muted">华住(huazhu)</h5></li>
+					</ul>
+				</div>
+				<div>
+					<small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;华住酒店集团 (NASDAQ:HTHT)，是中国领先的多品牌酒店集团，在全国370多座城市，运营3,000多家酒店，并拥有近70,000多名员工。自2005年创立以来，华住始终以专业而高效的智能化管理系统，专注于为客户提供高品质和多元化的住宿和出行体验，成就美好生活。 自2014年，华住酒店集团与雅高酒店集团形成长期战略联盟，共同开辟在华酒店业务。目前，华住运营的酒店品牌已经覆盖所有市场，包含高端市场的美爵、VUE、禧玥，中端市场的诺富特、美居、漫心、全季、桔子水晶、桔子精选、CitiGO、星程、宜必思尚品，以及大众市场的宜必思、汉庭优佳、汉庭、怡莱、海友等知名酒店品牌，满足从商务到休闲的个性化需求。“华住会”，作为华住推出的会员俱乐部，也是一个高效、简单、温情的酒店预订平台，正为全球超过1亿会员提供住宿、出行、购物等服务。 以“成为世界级的伟大企业”为愿景的华住酒店集团，在创始人季琦的带领下，已经成为中国高速发展的酒店集团之一。2010年，华住在美国纳斯达克成功上市。目前，集团位列美国Hotels杂志公布的全球酒店集团排名第9位，旗下汉庭品牌连续四年荣登BrandZ具价值中国品牌100强。</small>
+				</div>
+			</div>
+			<!-- 住客点评（下方） -->
+			<div class="row" id="jiudiandianpin">
+				<div style="color: #337AB7;">
+					<h4>住客点评</h4>
+				</div>
+				<div>
+					<!-- <p class="title">分数展示</p> -->
+					<div>
+						<ul class="show_number clearfix" style="margin: 0px; padding: 0px;">
+						   <li style="padding: 2px;margin: 0px;">
+						    <div class="atar_Show">
+								<!-- 分数 -->
+						      <p id="zongpinfen" tip=""></p>
+						    </div>
+						    <span></span>
+						   </li>
+						</ul>
+					</div>
+					
+				</div>
+			</div>
+			<!-- 上方 -->
+			<div class="row" style="margin: 10px 0px 0px 0px; padding: 0px;">
+				<ul class="list-inline">
+					<li>
+						<small>环境</small>
+						<small style="color: #337AB7;"><strong>4.7</strong></small>
+					</li>
+					<li></li>
+					<li>
+						<small>设施</small>
+						<small style="color: #337AB7;"><strong>4.6</strong></small>
+					</li>
+					<li></li>
+					<li>
+						<small>服务</small>
+						<small style="color: #337AB7;"><strong>4.6</strong></small>
+					</li>
+					<li></li>
+					<li>
+						<small>卫生</small>
+						<small style="color: #337AB7;"><strong>4.7</strong></small>
+					</li>
+				</ul>
+			</div>
+			<div class="row" style="background-color: #F2F2F2;padding-top: 4px;padding-bottom: 4px;">
+				<div class="col-lg-1">
+					<a href="#" id="quanbu"><small style="color: #337AB7;">全部(52)</small></a>
+				</div>
+				<div class="col-lg-1">
+					<a href="#" id="chapin"><small style="color: #337AB7;">差评(11)</small></a>
+				</div>
+				<div class="col-lg-3">
+					
+				</div>
+				<!--<div class="col-lg-3">-->
+					<!--<select name="">-->
+						<!--<option value="" selected="selected">入住时间排序</option>-->
+					<!--</select>-->
+				<!--</div>-->
+				<!--<div class="col-lg-3">-->
+					<!--<select name="">-->
+						<!--<option value="" selected="selected">全部房型</option>-->
+						<!--<option value="">大床</option>-->
+						<!--<option value="">双床</option>-->
+						<!--<option value="">多床</option>-->
+						<!--<option value="">单人床</option>-->
+					<!--</select>-->
+				<!--</div>-->
+			</div>
+			<!--  -->
+			<div class="row">
+				<table class="table table-condensed" id="pinlun_table">
+					<!--  -->
+				</table>
+			</div>
+			<!--  -->
+		</div>
+		<!--底部信息-->
+		<div class="container-fluid">
+			<hr>
+			<div class="row">
+				<div class="col-lg-6 col-lg-offset-2 text-center" style="margin-top: 0px;height: 100px;margin-bottom: 10px">
+					<ul class="list-inline" style="margin-top: 30px">
+						<li>&nbsp;&nbsp;</li>
+						<li>&nbsp;&nbsp;</li>
+						<li>&nbsp;&nbsp;</li>
+						<li>&nbsp;&nbsp;</li>
+						<li>&nbsp;&nbsp;</li>
+						<li>&nbsp;关于爱旅行&nbsp;</li>
+						<li>&nbsp;联系我们&nbsp;</li>
+						<li>&nbsp;安全中心&nbsp;</li>
+						<li>&nbsp;关于爱旅行&nbsp;</li>
+						<li>&nbsp;友情链接(<a href="http://www.cfourb.cn/ccBlog"><span style="color: darkred">CC--BLOG</span></a>)</li>
+					</ul>
+					<p class="copy" style="margin-left: 12%">Copyright © 2019- 爱旅行 | 爱旅行 &nbsp;&nbsp;&nbsp;&nbsp;     京ICP备12345678号-9&nbsp;&nbsp;&nbsp;<a href="http://www.bootstrapmb.com/" target="_blank" style="    color: rgb(139, 147, 157);"></a></p>
+				</div>
+				<div class="col-lg-1 text-left">
+					<p>
+						<img src="/img/erweima.jfif" width="100px" height="100px">
+					</p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-lg-3 col-lg-offset-7 text-center" style="margin-bottom: 30px">
+					<h5>扫码关注公众号，随时随地更方便！</h5>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

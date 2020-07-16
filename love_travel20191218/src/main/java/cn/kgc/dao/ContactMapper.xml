@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.ContactMapper">
+    <resultMap id="contactMap" type="Contact">
+        <id property="cId" column="cId"></id>
+    </resultMap>
+<select id="selectContactById" resultMap="contactMap" parameterType="Integer">
+    Select contact.* from user_contact
+ join contact on contact.cId=user_contact.cId INNER join `user` on `user`.uId=user_contact.uId
+and user.uId=#{uId}
+</select>
+    <select id="selectContactId" resultType="String" parameterType="Contact">
+        select cId from contact where realName=#{realName} and mobile=#{mobile}
+    </select>
+    <select id="selectUserId" resultType="String" parameterType="User">
+        select uid from `user` where password=#{password} and mobile=#{mobile}
+    </select>
+    <select id="selectCountByContactId" parameterType="Integer" resultType="Integer">
+        select count(*) from user_contact where cId=#{cId}
+    </select>
+    <insert id="insertContact" parameterType="Contact">
+insert into contact (realName,mobile)
+select #{realName},#{mobile} from dual
+where not exists (select * from contact where realName=#{realName} and mobile=#{mobile})
+    </insert>
+    <insert id="insertContactAndUser">
+       insert into user_contact (uId,cId)
+    select #{uId},#{cId} from dual
+    where not exists (select * from user_contact where uId=#{uId} and cId=#{cId})
+    </insert>
+    <update id="updateContact">
+        update contact set
+        <trim suffixOverrides=",">
+        <if test="realName!=null and realName!=''">
+        realName=#{realName},
+        </if>
+        <if test="mobile!=null and mobile!=''">
+        mobile=#{mobile},
+        </if>
+        </trim>
+        where cId=#{cId}
+    </update>
+    <update id="updateContactAndUser">
+        update user_contact set
+        cId=#{cId}
+        where id=#{id}
+    </update>
+    <delete id="deleteContactAndUserBy">
+        delete  from user_contact where uId=#{uId} and cId=#{cId}
+    </delete>
+    <delete id="deleteContact" parameterType="Contact">
+        delete from contact where  cId=#{cId}
+    </delete>
+    <select id="selectContactUserID" resultType="String">
+        select id from user_contact where uId=#{uId} and cId=#{cId}
+    </select>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.AlipayMapper">
+    <resultMap id="alipayMap" type="AlipayOrder">
+        <id property="id" column="id"></id>
+        <result property="outTradeNo" column="out_trade_no"></result>
+        <result property="tradeNo" column="trade_no"></result>
+        <result property="totalAmount" column="total_amount"></result>
+        <result property="userId" column="user_id"></result>
+    </resultMap>
+
+    <insert id="addAlipayOrder">
+        insert into alipayorder (out_trade_no,trade_no,total_amount,user_id)
+        select #{outTradeNo},#{tradeNo},#{totalAmount},#{userId} from dual
+		where not exists
+		(select out_trade_no from alipayorder where out_trade_no = #{outTradeNo})
+    </insert>
+
+    <update id="updateOrderStateByOrderId">
+        UPDATE `order` SET  `state` = "已付款"
+		 WHERE `no` = #{no`}
+    </update>
+    <!--修改订单，订单项，房间数量的数据-->
+    <update id="updateOrderIntimeAndOutimeAndroomCountByNo">
+         update `order` set inTime=#{inTime},outTime=#{outTime},money=#{money},roomTypeId=#{roomTypeId},roomCount=#{roomCount}
+         WHERE `no` = #{no}
+    </update>
+    <!--增加订单项-->
+    <insert id="addOrderListByOrder">
+        insert into order_list (orderId,roomId,contactId)
+        values( #{orderId},#{roomId},#{contactId})
+    </insert>
+    <update id="deleteNumFromRoom">
+         update `room` set num=#{num}
+         WHERE `rId` = #{rId}
+    </update>
+</mapper>

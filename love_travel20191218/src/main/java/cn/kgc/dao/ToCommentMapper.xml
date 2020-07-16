@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.ToCommentMapper">
+    <insert id="addComment" parameterType="Comment">
+        insert into `comment` (hotel_id,score,content,roomTypeId) values (#{hotel_id},#{score},#{content},#{roomTypeId})
+    </insert>
+    <select id="queryMSG" resultType="Hotel" parameterType="Integer">
+        select `sum`,`count` from hotel where hId=#{hId}
+    </select>
+    <update id="updateCommentByHotel">
+        update hotel set `sum`=#{sum},`count`=#{count} where hId=#{hId}
+    </update>
+    <update id="updateOrderState">
+        update `order` set state=#{state} where oId=#{oId}
+    </update>
+    <select id="queryHotelById" parameterType="integer" resultType="Hotel">
+        SELECT * FROM  hotel
+        WHERE hId=#{id}
+    </select>
+</mapper>

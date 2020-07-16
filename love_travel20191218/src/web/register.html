@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>无密码登录</title>
+		<!-- <link rel="stylesheet" type="text/css" href="css/styles.css"/> -->
+		<link rel="stylesheet" href="css/style.css" />
+		<script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/common.js"></script>
+		<!--背景图片自动更换-->
+		<script src="js/supersized.3.2.7.min.js"></script>
+		<script src="js/supersized-init.js"></script>
+		<!--表单验证-->
+		<script src="js/jquery.validate.min.js?var1.14.0"></script>
+		<script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+		<script type="text/javascript">
+			//获取手机号
+			$(function () {
+			// 	//倒计时
+				var wait=60;
+				function time(o) {
+					if (wait == 0) {
+						o.removeAttribute("disabled");
+						o.value="免费获取验证码";
+						wait = 60;
+					} else {
+						o.setAttribute("disabled", true);
+						o.value="重新发送(" + wait + ")";
+						wait--;
+						setTimeout(function() {
+									time(o)
+								},
+								1000)
+					}
+				}
+
+				//点击发送yzm
+				$("#smsCold").click(function () {
+					var phone=$.trim($("#phone").val());
+					if(phone==null||phone==""){
+						layer.msg('请输入手机号');
+						$("#phone").focus()
+						return false;
+					}else if(!(/^[1][3,4,5,7,8][0-9]{9}$/.test(phone))){
+						layer.msg('手机号格式错误');
+						$("#phone").focus()
+						return false;
+					}
+					//console.log("this1"+$(this).val())
+					$.ajax({
+						type:"POST",
+						url:"../user/queryPhone",
+                        async:false,
+						data:{
+							rePhone:phone,
+						},
+						//判断手机号是否已存在数据库中
+						success:function (result) {
+							console.log(result);
+							if(result!=0){
+								layer.msg('该手机还未注册');
+								return;
+							}
+							time(document.getElementById("smsCold"));
+							//ajax发送yzm
+							$.ajax({
+								type:"POST",
+								url:"../user/yzm",
+								async:false,
+								data:{
+									phone:phone,
+								},
+								success:function (result) {
+									console.log(result);
+									layer.msg('已发送验证码');
+
+									sessionStorage.setItem("smsCode",result);
+
+								},
+								error:function () {
+									layer.msg('发送失败');
+								}
+							})
+						},
+						error:function () {
+							layer.msg('发送失败');
+						}
+					})
+				})
+
+				$("#phoneLogin").click(function () {
+					var getPhone=$.trim($("#phone").val());
+					var getCole=$.trim($("#code").val());
+					var smscode = sessionStorage.getItem("smsCode");
+					var smscode_input = $("#code").val()
+					if(getPhone==""){
+						layer.msg('请输入手机号');
+
+						return false;
+					}else if(getCole==""){
+						layer.msg('请输入验证码');
+						return false;
+					}
+					if (smscode!=smscode_input){
+						layer.msg('验证码错误')
+						return;
+					}
+					var loginPhone=$.trim($("#phone").val());
+					var data= {phone:loginPhone};
+					$.ajax({
+						type:"POST",
+						url:"../user/phoneLogin",
+                        async:false,
+						data:data,
+						dataType: "json",
+						success:function (lluser) {
+							if(lluser != null && lluser != ""){
+								sessionStorage.setItem("user",JSON.stringify(lluser))
+								//登录成功
+								layer.msg('登录成功！')
+                                window.location.href="index.html";
+							}else{
+								window.location.href="#";
+							}
+						}
+					});
+				})
+
+				$("#toLogin").click(function () {
+					window.location.href="loginAndRegister.html"
+				})
+
+
+			})
+		</script>
+	</head>
+	<body>
+		<div class="register-container">
+			<div>
+				<div>
+							&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<h2>忘记密码？手机号验证成功即可登录！</h2>
+					<br>
+					<br>
+					<p>
+						手机号：<input type="text" name="phone" id="phone" value="" placeholder="已注册手机号" />
+
+					<p>
+					&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<input type="text" name="code" id="code" placeholder="验证码" value="" />
+
+<!--						<button type="button" class="#" id="smsCold" style="height:40px; width:100px;">发送验证码</button>-->
+						<input type="button" id="smsCold" style="height: 45px;width: 120px" class="button" value="发送验证码"/>
+
+					</p>
+					<p>
+						&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+						<button type="button" id="phoneLogin" class="button">立即登录</button>
+						<input type="button" id="toLogin" style="height: 45px;width: 120px" class="button" value="返回"/>
+					</p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

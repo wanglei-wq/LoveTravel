@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.RoomMapper">
+    <resultMap id="roomMap" type="Room">
+        <id property="rId" column="rId"></id>
+        <association property="roomType" javaType="RoomType">
+            <id property="rtId" column="rtId"/>
+        </association>
+    </resultMap>
+
+    <select id="queryRoomNumByCondition" resultMap="roomMap">
+        SELECT hotelId num FROM room WHERE num>=#{num} GROUP BY hotelId
+    </select>
+
+    <select id="queryRoomByIdAndReserve" resultMap="roomMap">
+        select * from room a
+        inner join room_type b on a.roomTypeId = b.rtId
+        where rId=#{id}
+    </select>
+</mapper>

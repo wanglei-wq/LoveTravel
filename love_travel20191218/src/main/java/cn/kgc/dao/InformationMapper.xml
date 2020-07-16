@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.InformationMapper">
+<update id="updateInformation">
+    update `user` set realName=#{realName}, gender=#{gender} where uId=#{uId}
+</update>
+    <select id="queryPassword">
+        select `password` from `user` where uId=#{uId}
+    </select>
+    <update id="updatePassword">
+        update user set password=#{password} where uId=#{uId}
+    </update>
+</mapper>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="utf-8">
+		<title>用户订单</title>
+		<link rel="stylesheet" type="text/css" href="https://cdn.bootcss.com/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+		<script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+		<script type="text/javascript" src="/js/common_myInfo.js"></script>
+		<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+            $(function () {
+				//
+                $("button[name='page']").click(function () {
+                    var index= $(this).val();
+                    var data = $("form").serialize();
+                    location.href="/order/queryAllOrder?pageNum="+index
+                })
+                //隔行变色
+//                $("tr:odd").css("background","yellow")
+				//回显入住时间
+				var inTime =  $("input[name='inTimeHidden']").val()
+                console.log(frmt(inTime))
+                $("input[name='inTime']").val(frmt(inTime))
+				//离宿时间
+				var outTime =  $("input[name='outTimeHidden']").val()
+                console.log(frmt(outTime))
+                $("input[name='outTime']").val(frmt(outTime))
+				//回显状态
+                var state =  $("input[name='stateHidden']").val()
+                if(state!=null && state!=''){
+                    $("select").val(state)
+                }
+            })
+
+            function detail(id) {
+                location.href="/order/queryOrderById?id="+id;
+            };
+            function deleteBtn(id) {
+                $.ajax({
+                    type:"post",
+                    url:"/order/deleteOrderById?id="+id,
+                    success:function (result) {
+                        alert("删除成功 ");
+						window.location.reload()
+                    }
+                })
+            }
+            function frmt(time) {
+                var date = new Date(time)
+                var inTime2 = date.getFullYear() + '-' +
+                    (date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth() + 1) + '-' +
+                    (date.getDate()<9?'0'+date.getDate():date.getDate())
+				return inTime2;
+            }
+            function rePay(hotelId) {
+                window.location.replace("/roomdetails.html?hotelId=" + hotelId);
+            }
+            //评价
+			function toComment(oId,hotelId,roomTypeId) {
+                //alert(oId+"-"+hotelId+"-"+roomTypeId)
+				window.location.replace("/toCommentController/queryHotelById?hId="+hotelId+"&oId="+oId+"&roomTypeId="+roomTypeId)
+            }
+		</script>
+	</head>
+	<body >
+		<div class="container-fluid">
+			<!--头部信息-->
+				<div class="row" style="background-image:-webkit-linear-gradient( right,#3dd,white,#6ac,#3dd);">
+					<div class="col-lg-3 col-lg-offset-7  text-right">
+						<ul class="nav nav-pills text-right" name="RBAC">
+							<li >
+								<a href="/index.html" name="RBAC">酒店查询</a>
+							</li>
+							<li >
+								<a href="/myinfo.html" name="RBAC">个人信息</a>
+							</li>
+							<li >
+								<a href="/contact.html" name="RBAC">联系人信息</a>
+							</li>
+							<li class="active" >
+								<a href="/order/queryAllOrder?pageNum=1" name="RBAC">我的订单</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			<div class="row">
+
+				<div class="row">
+					<div class="col-lg-4 text-center">
+						<ul class="list-inline">
+							<li>
+								<h3>选酒店就来</h3>
+							</li>
+							<li><h2><em>爱旅行</em></h2></li>
+						</ul>
+					</div>
+				</div>
+
+
+				<div class="col-lg-10 col-md-10 col-lg-offset-1 col-md-offset-1">
+					<form action="/order/queryAllOrder">
+						<div class="row form-inline text-center" style="margin-top: 50px">
+							<div class="form-group">
+								<label>入住日期:</label>
+								<input class="form-control" type="hidden" name="inTimeHidden" th:value="${inTime}">
+								<input class="form-control" type="date" name="inTime" th:value="${inTime}" style="width: 280px">
+							</div>
+							<div class="form-group">
+								<label >离宿时间:</label>
+								<input class="form-control" type="hidden" name="outTimeHidden" th:value="${outTime}">
+								<input class="form-control" type="date" name="outTime" th:value="${outTime}" style="width: 280px">
+							</div>
+							<div class="form-group">
+								<input class="form-control" type="hidden" name="stateHidden" th:value="${state}">
+								<select class="form-control" name="state">
+									<option value="">订单状态</option>
+									<option value="未付款">未付款</option>
+									<option value="已付款">已付款</option>
+									<option value="已评价">已评价</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<button  type="submit" id="chaxun" class="form-control btn btn-warning" style="height: 30px;">查询</button>
+							</div>
+						</div>
+					</form>
+					<div class="row" style="margin: 20px;">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-lg-10 col-md-10 col-lg-offset-1 col-md-offset-1 ">
+					<table class="table table-striped table-bordered table-hover">
+						<tr class="text-center" style="background-color: #5bc0de">
+							<td><strong>所属酒店</strong></td>
+							<td><strong>姓名</strong></td>
+							<td><strong>电话</strong></td>
+							<td><strong>入住-离店时间</strong></td>
+							<td><strong>入住时长</strong></td>
+							<td><strong>下单时间</strong></td>
+							<td><strong>房型</strong></td>
+							<td><strong>房间数量</strong></td>
+							<td><strong>订单金额</strong></td>
+							<td><strong>订单状态</strong></td>
+							<td><strong>操作</strong></td>
+						</tr>
+						<tr th:each="order:${pageInfo.list}" align="center">
+							<td th:text="${order.hotel.name}"><small></small></td>
+							<td th:text="${order.user.realName}"><small></small></td>
+							<td th:text="${order.user.mobile}"><small></small></td>
+							<td>
+								入住:<small th:text="${#dates.format(order.inTime, 'yyyy-MM-dd')}"></small>
+								<br>
+								离店:<small th:text="${#dates.format(order.outTime, 'yyyy-MM-dd')}"></small>
+							</td>
+							<td th:text="${#dates.format(order.outTime, 'dd')}-${#dates.format(order.inTime, 'dd')}+'天'"><small></small></td>
+							<td th:text="${#dates.format(order.time, 'yyyy-MM-dd')}"><small></small></td>
+							<td th:text="${order.room.roomType.type}"><small></small></td>
+							<td th:text="${order.roomCount}"><small></small></td>
+							<td th:text="${order.money}"><small></small></td>
+							<td th:text="${order.state}"><small></small></td>
+							<td>
+								<ul class="list-inline text-center">
+									<li>
+										<button type="button" th:onclick="'javascript:detail(\''+${order.oId}+'\');'" class="btn btn-info">详情</button>
+									</li>
+									<li th:if="${order.state == '未付款' }">
+										<button type="button" class="btn btn-info" style="width: 153.9px;">去支付</button>
+									</li>
+									<li th:if="${order.state == '已付款' }">
+										<button type="button" th:onclick="'javascript:rePay(\''+${order.hotelId}+'\');'" class="btn btn-info">再次购买</button>
+										<button type="button" class="btn btn-info" th:onclick="'javascript:toComment(\''+${order.oId}+'\',\''+${order.hotelId}+'\',\''+${order.roomTypeId}+'\')'" >去评价</button>
+									</li>
+									<li th:if="${order.state == '已评价' }">
+										<button type="button" class="btn btn-info" style="width: 153.9px;">追加评价</button>
+									</li>
+
+									<li>
+										<button type="button" th:onclick="'javascript:deleteBtn(\''+${order.oId}+'\');'" class="btn btn-danger">删除订单</button>
+									</li>
+								</ul>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="col-lg-10 col-md-10 col-lg-offset-1 col-md-offset-1 ">
+				<div align="left">
+					[
+					<span th:text="${pageInfo.pageNum}"></span>&nbsp;
+					/&nbsp;<span th:text="${pageInfo.pages}"></span>&nbsp;
+					总共<span th:text="${pageInfo.total}"></span>
+					记录
+					]
+				</div>
+				<div align="right">
+					<button name="page" th:value="${pageInfo.navigateFirstPage}">首页</button>
+					<button name="page" th:value="${pageInfo.prePage}">上一页</button>
+					<button name="page" th:value="${pageInfo.nextPage}">下一页</button>
+					<button name="page" th:value="${pageInfo.navigateLastPage}">末页</button>
+				</div>
+			</div>
+
+
+			<!--底部信息-->
+			<div style="position: fixed;bottom:0;width:100%;">
+				<hr>
+				<div class="row">
+					<div class="col-lg-6 col-lg-offset-2 text-center" style="margin-top: 0px;height: 100px;margin-bottom: 10px">
+						<ul class="list-inline" style="margin-top: 30px">
+							<li>&nbsp;&nbsp;</li>
+							<li>&nbsp;&nbsp;</li>
+							<li>&nbsp;&nbsp;</li>
+							<li>&nbsp;&nbsp;</li>
+							<li>&nbsp;&nbsp;</li>
+							<li>&nbsp;关于爱旅行&nbsp;</li>
+							<li>&nbsp;联系我们&nbsp;</li>
+							<li>&nbsp;安全中心&nbsp;</li>
+							<li>&nbsp;关于爱旅行&nbsp;</li>
+							<li>&nbsp;友情链接(<a href="http://www.cfourb.cn/ccBlog"><span style="color: darkred">CC--BLOG</span></a>)</li>
+						</ul>
+						<p class="copy" style="margin-left: 12%">Copyright © 2019- 爱旅行 | 爱旅行 &nbsp;&nbsp;&nbsp;&nbsp;     京ICP备12345678号-9&nbsp;&nbsp;&nbsp;<a href="http://www.bootstrapmb.com/" target="_blank" style="    color: rgb(139, 147, 157);"></a></p>
+					</div>
+					<div class="col-lg-1 text-left">
+						<p>
+							<img src="/img/erweima.jfif" width="100px" height="100px">
+						</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-3 col-lg-offset-7 text-center" style="margin-bottom: 30px">
+						<h5>扫码关注公众号，随时随地更方便！</h5>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</body>
+</html>

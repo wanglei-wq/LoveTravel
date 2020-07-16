@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="utf-8">
+		<title>订单详情</title>
+		<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css"/>
+        <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+		<script src="/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<script type="text/javascript">
+		$(function(){
+			$("#zss").click(function(){
+				location.href="/order/queryAllOrder?pageNum=1"
+			})
+		})
+	</script>
+	<body style="background-color: #c7ddef">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-2">
+					<h4><strong>订单详情</strong></h4>
+				</div>
+				<div class="col-lg-1 col-lg-offset-3">
+					<button id="zss" type="button" class="btn btn-danger">返回</button>
+				</div>
+			</div>
+			<!-- 订单 -->
+			<div class="row" style="background-color: white;margin-top: 40px;padding: 5px;">
+				<div>
+					<ul>
+						<li style="list-style: none;"><strong style="color: dodgerblue;"><small th:text="${hotel.name}"></small></strong></li>
+						<li>
+							<small th:text="${hotel.position}"></small>
+						</li>
+						<li><small>订单号:<span th:text="${orderDetail.no}"></span></small></li>
+						<li><small>预定日期:<span th:text="${#dates.format(orderDetail.time, 'yyyy-MM-dd')}"></span></small></li>
+						<li><small>总金额:<span th:text="${orderDetail.money}"></span></small></li>
+						<li><small>房间数量:<span th:text="${orderDetail.roomCount}"></span></small></li>
+					</ul>
+				</div>
+			</div>
+			<div class="row" style="margin: 30px;">
+
+			</div>
+			<div class="row">
+				<strong>房间入住信息</strong>
+				<hr style="background-color: black;height: 1px;margin-top: 3px;margin-bottom: 10px;">
+			</div>
+			<div class="row">
+				<div style="margin-top: 1px;"></div>
+				<ul>
+					<li>
+						<ul class="list-inline">
+							<li>入住日期:<small th:text="${#dates.format(orderDetail.inTime, 'yyyy-MM-dd')}"></small></li><br>
+							<li>离店日期:<small th:text="${#dates.format(orderDetail.outTime, 'yyyy-MM-dd')}"></small></li>
+						</ul>
+					</li>
+					<br>
+					<li>
+						<table border="1" cellpadding="0" style="background-color: #D9EDF7" width="50%">
+							<tr align="center">
+								<td>房型</td>
+								<td>早餐供应</td>
+								<td>金额</td>
+								<td>房间最多入住人数</td>
+								<td>入住人姓名</td>
+								<td>入住人电话</td>
+							</tr>
+
+							<th:block th:if="${orderDetail.orderList != null}">
+                                <tr th:each="ol:${orderDetail.orderList}" align="center">
+								    <td><small th:text="${orderDetail.roomType.type}"></small></td>
+                                    <td><small th:if="${ol.room.ismeal==0}">无供应</small>
+										<small th:if="${ol.room.ismeal==1}">供应早餐</small>
+									</td>
+                                    <td><small th:text="*{ol.room.price}"></small></td>
+                                    <td><small th:text="*{ol.room.peopleNum}"></small></td>
+                                    <td><small th:text="*{ol.contact.realName}"></small></td>
+                                    <td><small th:text="*{ol.contact.mobile}"></small></td>
+                                </tr>
+							</th:block>
+						</table>
+					</li>
+				</ul>
+			</div>
+			<!-- 联系人信息 -->
+			<div class="row" style="margin-top: 9px;">
+				<strong>联系人信息</strong>
+				<hr style="background-color: black;height: 1px;margin-top: 3px;margin-bottom: 10px;">
+			</div>
+			<div class="row">
+				<ul class="list-inline">
+					<li>
+                        <th:block th:if="${orderDetail.orderList != null}">
+							<table>
+									<td><strong><small>姓名:</small></strong><small th:text="${orderDetail.orderList[0].user.realName}"></small>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+									<td><strong><small>联系电话:</small></strong><small th:text="${orderDetail.orderList[0].user.mobile}"></small>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+							</table>
+                        </th:block>
+					</li>
+				</ul>
+			</div>
+			<!-- 支付信息 -->
+			<div class="row" style="margin-top: 7px;">
+				<strong>支付信息</strong>
+				<hr style="background-color: black;height: 1px;margin-top: 3px;margin-bottom: 10px;">
+			</div>
+			<div class="row">
+				<ul class="list-inline">
+					<li><small>支付类型: 在线支付</small></li> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</ul>
+			</div>
+		</div>
+	</body>
+</html>

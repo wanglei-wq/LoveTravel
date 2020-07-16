@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kgc.dao.UserMapper">
+
+    <resultMap id="userMap" type="User">
+        <id property="uId" column="uId"/>
+    </resultMap>
+    <!--用户登录-->
+    <select id="login" parameterType="User" resultType="User">
+        SELECT * FROM user
+        WHERE mobile=#{mobile}
+        and password=#{password}
+    </select>
+    <!--    用户注册-->
+    <insert id="saveUser" parameterType="User">
+        INSERT INTO `loveTravel`.`user` ( `mobile`,`password`)
+        VALUES(#{mobile},#{password})
+    </insert>
+    <!--    修改密码-->
+    <update id="updateByPhone" parameterType="User">
+        update `loveTravel`.`user`
+        set
+          `password` = #{password}
+        where   `mobile` = #{mobile}
+
+    </update>
+    <!--    查询所有用户-->
+    <select id="queryAllUser" resultMap="userMap">
+        select * from user
+    </select>
+<!--    手机号登陆-->
+    <select id="phoneLogin" parameterType="string" resultType="User">
+       SELECT * FROM `user`
+        WHERE mobile=#{phone}
+    </select>
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.kgc.dao.HotelMapper">
+
+    <resultMap id="hotelMap" type="Hotel">
+        <id property="hId" column="hid" />
+        <collection property="rooms" resultMap="roomMap">
+        </collection>
+    </resultMap>
+    
+    <resultMap id="roomMap" type="Room">
+        <id property="rId" column="rId"></id>
+        <association property="roomType" javaType="RoomType">
+            <id property="rtId" column="rtId"></id>
+        </association>
+    </resultMap>
+
+    <select id="queryAllHotel" resultType="Hotel">
+        SELECT * FROM hotel
+    </select>
+
+    <select id="queryHotelById" resultMap="hotelMap">
+        SELECT
+          hotel.*,
+          room.*,
+          room_type.*
+        FROM
+          loveTravel.`hotel`
+          LEFT JOIN room
+            ON hotel.hid = room.`hotelId`
+          LEFT JOIN room_type
+            ON room.`roomTypeId` = room_type.rtId
+            WHERE hid = #{id}
+    </select>
+
+    <select id="queryHotelByCondition" parameterType="map" resultMap="hotelMap">
+    SELECT
+    hotel.*,room.*,room_type.*
+    FROM
+    loveTravel.`hotel`
+    LEFT JOIN
+    room
+    ON hotel.hid=room.`hotelId`
+    LEFT JOIN
+    room_type
+    ON room.`roomTypeId`=room_type.rtId
+    <where>
+        <if test="cityName!=null">
+            cityName  LIKE CONCAT('%',#{cityName},'%')
+        </if>
+        <if test="hotelName!=null">
+            AND `name` LIKE CONCAT('%',#{hotelName},'%')
+        </if>
+        <if test="roomNum!=null">
+            AND hid IN (SELECT
+            hotelId
+            FROM
+            room
+            RIGHT JOIN
+            (SELECT
+            hotelId hid,
+            SUM(num) total
+            FROM
+            room
+            GROUP BY hotelId) newRoom
+            ON room.`hotelId` = newRoom.hid
+            WHERE total >= 5
+            GROUP BY hotelId)
+        </if>
+        <if test="(level!=null and level==3) or (level!=null and level==4) or (level!=null and level==5)">
+            AND star=#{level}
+        </if>
+        <if test="level!=null and level==1">
+            AND star in (0,1,2)
+        </if>
+    </where>
+    <if test="orderBy==1">
+        order by price ASC
+    </if>
+    <if test="orderBy==2">
+        order by price DESC
+    </if>
+    <if test="orderBy==3">
+        order by star,price
+    </if>
+    <if test="orderBy==4">
+        order by star DESC,price ASC
+    </if>
+    <if test="orderBy==5">
+        order by `sum`/`count` DESC,price ASC
+    </if>
+    </select>
+</mapper>

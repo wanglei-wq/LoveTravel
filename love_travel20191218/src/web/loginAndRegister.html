@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>登录</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/common.js"></script>
+    <!--背景图片自动更换-->
+    <script src="js/supersized.3.2.7.min.js"></script>
+    <script src="js/supersized-init.js"></script>
+    <!--表单验证-->
+    <script src="js/jquery.validate.min.js?var1.14.0"></script>
+    <script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+
+    <script type="text/javascript">
+
+
+        $(function () {
+            //去注册页面
+            $("#goAddUser").click(function () {
+                window.location.href="addUser.html"
+            })
+            //去首页
+            $("#toIndex").click(function () {
+                window.location.href="index.html";
+            })
+
+            //点击发送验证请求
+            $("#sendMsg").click(function () {
+                //获取输入的手机号判断手机号是否存在
+                var rePhone=$.trim($("#rePhone").val());
+                if(rePhone==null || rePhone==""){
+                    layer.msg('请输入手机号')
+                    $("#rePhone").focus();
+                    return false;
+                }else if(!(/^[1][3,4,5,7,8][0-9]{9}$/.test(rePhone))){
+                    layer.msg('手机号格式错误')
+                    return false;
+                }
+                $.ajax({
+                    type:"POST",
+                    url:"../user/queryPhone",
+                    async:true,
+                    data:{
+                        rePhone:rePhone,
+                    },
+                    success:function (result) {
+                        console.log(result);
+                        if(result==0){
+                            layer.msg('该手机已注册')
+                            return;
+                        }
+                        //发送yzm
+                        layer.msg('验证码已发送')
+
+                        $.ajax({
+                            type:"POST",
+                            url:"../user/yzm",
+                            async:true,
+                            data:{
+                                phone:rePhone,
+                            },
+                            success:function (result) {
+                                console.log(result);
+                                sessionStorage.setItem("smsCode",result);
+                            },
+                            error:function () {
+                                layer.msg('数据异常')
+                            }
+                        })
+                    },
+                    error:function () {
+                        layer.msg('数据异常')
+                    }
+                })
+
+            })
+
+            $("#register").click(function () {
+                var smscode = sessionStorage.getItem("smsCode");
+                var smscode_input = $("#sms_code").val()
+                if (smscode!=smscode_input){
+
+                    layer.msg('验证码错误')
+                    return;
+                }
+                //请求controller注册方法
+                var rePhone=$.trim($("#rePhone").val());
+                var rePassword=$.trim($("#rePassword").val());
+                var data= {rePhone:rePhone,rePassword:rePassword};
+                $.ajax({
+                    type:"POST",
+                    url:"../user/save",
+                    data:data,
+                    success:function (msg) {
+                        if(msg==1){
+                            //注册成功
+                            if (window.confirm("注册成功,是否跳转登录界面！")){
+                                window.location.replace("loginAndRegister.html");
+                            }
+                        }else{
+                            window.location.href="#";
+                        }
+                    }
+                });
+            })
+            $("#login").click(function () {
+                var userPhone=$.trim($("#phoneId").val());
+                var userPassword=$.trim($("#passwordId").val());
+                console.log(userPassword)
+                if(userPhone==null || userPhone==""){
+                    layer.msg('请输入手机号')
+                    $("#phoneId").focus();
+                    return false;
+                }else if(!(/^[1][3,4,5,7,8][0-9]{9}$/.test(userPhone))){
+                    layer.msg('手机号格式错误')
+                    $("#phoneId").focus();
+                    return false;
+                }else if(userPassword==null || userPassword==""){
+                    layer.msg('请输入密码')
+                    $("#passwordId").focus();
+                    return false;
+                }
+                var data= {userPhone:userPhone,userPassword:userPassword};
+                $.ajax({
+                    type:"post",
+                    url:"../user/login",
+                    data:data,
+                    dataType: "json",
+                    success:function (lluser) {
+                        if(lluser != null && lluser != ""){
+                            sessionStorage.setItem("user",JSON.stringify(lluser))
+                            layer.msg('登录成功')
+                            setTimeout(function () {
+                                window.location.href="index.html";
+                            },1000)
+                        }else{
+                            layer.msg('账号密码错误')
+                        }
+                    }
+                })
+
+                $("#toIndex").click(function () {
+                    window.location.href="index.html";
+                })
+            })
+
+
+        })
+    </script>
+</head>
+
+<body>
+<div class="register-container" align="center">
+
+
+        <h1>欢迎回来</h1>
+    <br/>
+        <div>
+            <input id="phoneId" type="text" name="mobile" class="username" placeholder="手机号" autocomplete="off"/>
+        </div>
+        <div>
+            <input id="passwordId" type="password" name="password" class="password" placeholder="密码" oncontextmenu="return false" onpaste="return false" />
+        </div>
+    &nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="register.html" style="color: #3c3c3c;text-decoration: none">忘记密码</a>
+    <br/>
+        <button id="login" type="submit" class="button">登 陆</button>
+    <br/>
+       <button id="goAddUser" class="button">立即注册<a href="addUser.html"></a></button>
+    <br/>
+        <button id="toIndex" class="button">回到主页<a href="index.html"></a></button>
+
+
+<!--        <label>-->
+<!--            <span>手机号</span>-->
+<!--            <input type="text" name="mobile" id="phoneId" />-->
+<!--        </label>-->
+<!--        <div>-->
+<!--            <input type="text" name="mobile" id="phoneId" class="username" placeholder="手机号" autocomplete="off"/>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--            <input type="password" name="password" id="passwordId" class="password" placeholder="密码" oncontextmenu="return false" onpaste="return false" />-->
+<!--        </div>-->
+<!--        <div>-->
+<!--&lt;!&ndash;            <a href="#"style="color: darkgrey;></a>&ndash;&gt;-->
+<!--            <a href="register.html" style="color: darkgrey" style="text-decoration:none">忘记密码</a>-->
+<!--            <br/>-->
+<!--            <button class="button" type="submit" id="login" >登 陆</button>-->
+<!--        </div>-->
+
+
+<!--        <label>-->
+<!--            <span>密码</span>-->
+<!--            <input type="password" name="password" id="passwordId"/>-->
+<!--        </label>-->
+<!--        <p class="forgot-pass"><a href="register.html">忘记密码？</a></p>-->
+<!--        <button type="button" class="submit" id="login">登 录-->
+<!--            &lt;!&ndash;  &ndash;&gt;-->
+<!--            &lt;!&ndash;				<a href="index.html" id="login"></a>&ndash;&gt;-->
+<!--            &lt;!&ndash;  &ndash;&gt;-->
+<!--        </button>-->
+<!--        <button type="button" class="fb-btn">使用 <span>facebook</span> 帐号登录</button>-->
+
+<!--    <div class="sub-cont">-->
+<!--        <div class="img">-->
+<!--            <div class="img__text m&#45;&#45;up">-->
+<!--                <h2>还未注册？</h2>-->
+<!--                <p>立即注册，发现大量机会！</p>-->
+<!--            </div>-->
+<!--            <div class="img__text m&#45;&#45;in">-->
+<!--                <h2>已有帐号？</h2>-->
+<!--                <p>有帐号就登录吧，好久不见了！</p>-->
+<!--            </div>-->
+<!--            <div class="img__btn">-->
+<!--                <span class="m&#45;&#45;up">注 册</span>-->
+<!--                <span class="m&#45;&#45;in">登 录</span>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div class="form sign-up">-->
+<!--            <h2>立即注册</h2>-->
+<!--            <label>-->
+<!--                <span>手机号</span>-->
+<!--                &lt;!&ndash;                    注册用户名&ndash;&gt;-->
+<!--                <input type="text" id="rePhone"/>-->
+<!--            </label>-->
+<!--            <label>-->
+<!--                <p>-->
+<!--                    <span>验证码</span>-->
+<!--                    <input type="text" id="sms_code"/>-->
+<!--                    <input type="button" id="sendMsg" value="发送验证码" style="color: chocolate"></input>-->
+<!--                </p>-->
+<!--            </label>-->
+<!--            <label>-->
+<!--                <span>密码</span>-->
+<!--                <input type="password" id="rePassword" />-->
+<!--            </label>-->
+<!--            <button type="button" class="submit" id="register">注 册</button>-->
+<!--&lt;!&ndash;            <button type="button" class="fb-btn">使用 <span>facebook</span> 帐号注册</button>&ndash;&gt;-->
+<!--        </div>-->
+<!--    </div>-->
+</div>
+    </body>
+
+</html>
